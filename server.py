@@ -86,6 +86,21 @@ RANGES = {
   },
 }
 
+# ═══════════════════════════════════════════════════════
+# RANGES HERO (pour les scénarios 3bet)
+# None = aléatoire
+# ═══════════════════════════════════════════════════════
+
+HERO_RANGES = {
+  'vs_LJ_open':  None,
+  'vs_BTN_open': None,
+  'vs_SB_raise': None,
+  'vs_SB_3bet':  expand_range(['KK+','88-44','AQs-A2s','K5s+','Q8s+','J8s+','T8s+','97s+','86s+','76s','65s','54s','AJo-ATo','KJo+','QJo']),
+  'vs_BB_3bet':  expand_range(['KK+','99-55','AQs-A2s','K5s+','Q7s+','J8s+','T8s+','97s+','86s+','76s','AJo-A9o','KTo+','QJo']),
+  'vs_BTN_3bet': expand_range(['99-55','AQs-A6s','A3s-A2s','K9s+','Q9s+','J9s+','T8s+','97s+','87s','76s','65s','AQo-AJo','KQo']),
+}
+
+
 # Mapping pour l'interface : position hero → ranges adverses disponibles
 # "Je suis en position X, l'adversaire est en position Y avec la range Z"
 SCENARIOS = [
@@ -229,13 +244,20 @@ def deal_question(scenario_id=None):
     range_info = RANGES[range_key]
     range_set = range_info['hands']
 
+    # Range hero : definie ou aleatoire
+    hero_range = HERO_RANGES.get(scenario['id'], None)
+
     for _ in range(400):
         deck = deck_base[:]
         random.shuffle(deck)
         hero = deck[:2]
         board = deck[2:2+board_size]
         hkey = hero_hand_key(hero)
-        if is_interesting(hero, board): break
+        # Si range hero definie, verifier que la main est dedans
+        if hero_range is not None and hkey not in hero_range:
+            continue
+        if is_interesting(hero, board):
+            break
 
     blockers_raw = set([cs(c) for c in hero+board])
     hero_score = eval_.evaluate(board, hero)
