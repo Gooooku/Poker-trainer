@@ -178,6 +178,39 @@ def _fill_cache():
             import time; time.sleep(0.5)
 
 # ═══════════════════════════════════════════
+# BLUFF TRAINER — logique
+# ═══════════════════════════════════════════
+BLUFF_SCENARIOS = [
+    {'sizing': '2 x pot',   'bet_pot': 2.0,  'frq_bluff': 40, 'ratio': '1.5 CV pour 1 CB', 'frq_defense': 33},
+    {'sizing': '1.5 x pot', 'bet_pot': 1.5,  'frq_bluff': 38, 'ratio': '1.7 CV pour 1 CB', 'frq_defense': 40},
+    {'sizing': '100% pot',  'bet_pot': 1.0,  'frq_bluff': 33, 'ratio': '2 CV pour 1 CB',   'frq_defense': 50},
+    {'sizing': '66% pot',   'bet_pot': 0.66, 'frq_bluff': 29, 'ratio': '2.5 CV pour 1 CB', 'frq_defense': 60},
+    {'sizing': '50% pot',   'bet_pot': 0.5,  'frq_bluff': 25, 'ratio': '3 CV pour 1 CB',   'frq_defense': 67},
+    {'sizing': '33% pot',   'bet_pot': 0.33, 'frq_bluff': 20, 'ratio': '4 CV pour 1 CB',   'frq_defense': 75},
+    {'sizing': '25% pot',   'bet_pot': 0.25, 'frq_bluff': 17, 'ratio': '5 CV pour 1 CB',   'frq_defense': 80},
+    {'sizing': '20% pot',   'bet_pot': 0.20, 'frq_bluff': 14, 'ratio': '6 CV pour 1 CB',   'frq_defense': 83},
+]
+
+def gen_question():
+    sc = random.choice(BLUFF_SCENARIOS)
+    cv = random.randint(4, 30)
+    cb_exact = cv * sc['bet_pot'] / (1 + sc['bet_pot'])
+    cb_round = round(cb_exact)
+    return {
+        'sizing': sc['sizing'],
+        'frq_bluff': sc['frq_bluff'],
+        'frq_defense': sc['frq_defense'],
+        'ratio': sc['ratio'],
+        'cv': cv,
+        'cb_exact': round(cb_exact, 1),
+        'cb_answer': cb_round,
+        'cb_tolerance': 1,
+        'defense_tolerance': 2,
+        'frq_bluff_tolerance': 2,
+    }
+
+
+# ═══════════════════════════════════════════
 # RANGE TRAINER
 # ═══════════════════════════════════════════
 def range_expand(tokens):
@@ -395,7 +428,272 @@ def get_scenarios_list():
 # ═══════════════════════════════════════════
 # HTML
 # ═══════════════════════════════════════════
-HOME_HTML="""<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Poker Trainer</title><link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono&display=swap" rel="stylesheet"><style>:root{--bg:#0d0f14;--surface:#161920;--border:#2a3045;--accent:#4f8ef7;--accent2:#7c5cfc;--text:#e8ecf5;--text2:#7a8399;}*{box-sizing:border-box;margin:0;padding:0;}body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;}h1{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;letter-spacing:-1px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center;margin-bottom:8px;}.sub{color:var(--text2);font-size:13px;text-align:center;margin-bottom:48px;}.apps{display:grid;grid-template-columns:1fr 1fr;gap:20px;width:100%;max-width:600px;}@media(max-width:500px){.apps{grid-template-columns:1fr;}}.app-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px 24px;text-decoration:none;color:var(--text);transition:border-color .2s,transform .15s;display:block;}.app-card:hover{border-color:var(--accent);transform:translateY(-2px);}.app-icon{font-size:36px;margin-bottom:14px;}.app-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px;}.app-desc{font-size:12px;color:var(--text2);line-height:1.7;}.app-badge{display:inline-block;margin-top:12px;font-size:11px;padding:3px 10px;border-radius:20px;background:#1a2a4a;color:var(--accent);border:1px solid #2a3f6a;}</style></head><body><h1>Poker Trainer</h1><p class="sub">Ranges 50BB, 25BB, 20BB, 15BB &amp; 10BB</p><div class="apps"><a class="app-card" href="/combos"><div class="app-icon">&#9824;</div><div class="app-title">Combos Trainer</div><div class="app-desc">Compte les combos qui te battent a partir de la range adverse. Bloqueurs, flop/turn/river.</div><div class="app-badge">6 scenarios 50BB</div></a><a class="app-card" href="/range"><div class="app-icon">&#9830;</div><div class="app-title">Range Trainer</div><div class="app-desc">Reconstruit la range de memoire. 33 scenarios 50BB, 25BB, 20BB, 15BB et 10BB.</div><div class="app-badge">33 scenarios</div></a></div></body></html>"""
+
+HTML_BLUFF = r"""<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bluff Trainer</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0f14;--surface:#161920;--surface2:#1e2330;--border:#2a3045;--accent:#4f8ef7;--accent2:#7c5cfc;--green:#2dd4a0;--red:#f75f5f;--amber:#f7c94f;--text:#e8ecf5;--text2:#7a8399;--text3:#4a5268;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 12px 60px;}
+.header{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:720px;margin-bottom:16px;}
+h1{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.back-btn{height:34px;padding:0 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;text-decoration:none;display:flex;align-items:center;}
+.back-btn:hover{color:var(--text);}
+.main{width:100%;max-width:720px;display:flex;flex-direction:column;gap:12px;}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.stat{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center;}
+.stat-v{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;}
+.stat-l{font-size:9px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:.07em;}
+.s-ok .stat-v{color:var(--green);}.s-str .stat-v{color:var(--amber);}.s-sc .stat-v{color:var(--accent);}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px;}
+.situation{background:linear-gradient(135deg,#0f1a2e,#1a0f2e);border:1px solid #2a3f6a;border-radius:12px;padding:22px 24px;margin-bottom:18px;text-align:center;}
+.sit-sentence{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--text);line-height:1.6;}
+.sit-highlight{color:var(--amber);font-size:26px;font-weight:800;}
+.fields{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;width:100%;}
+@media(max-width:520px){.fields{grid-template-columns:1fr;}}
+.field{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;min-width:0;}
+.field-question{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--text);line-height:1.5;min-height:72px;margin-bottom:10px;}
+.field-row{display:flex;align-items:center;gap:6px;}
+.field-input{flex:1;height:48px;background:#fff;border:2px solid #999;border-radius:8px;color:#111;font-family:'Syne',sans-serif;font-size:20px;font-weight:800;text-align:center;outline:none;min-width:0;width:0;}
+.field-input:focus{border-color:var(--accent);}
+.field-input.correct{background:#e6fff5;border-color:var(--green)!important;}
+.field-input.wrong{background:#fff2f2;border-color:var(--red)!important;}
+.field-unit{font-size:14px;color:var(--text2);flex-shrink:0;}
+.field-result{font-size:14px;font-weight:700;width:20px;text-align:center;flex-shrink:0;}
+.ratio-hint{font-size:10px;color:var(--text3);margin-top:4px;}
+.field-answer{font-size:11px;color:var(--red);font-weight:700;margin-top:4px;display:none;}
+.field-answer.show{display:block;}
+.actions{display:flex;gap:8px;flex-wrap:wrap;}
+.btn{height:44px;padding:0 20px;border-radius:10px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:transform .1s;}
+.btn:active{transform:scale(.97);}
+.btn-p{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
+.btn-s{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
+.btn-table{background:#1a1a2e;color:var(--accent);border:1px solid #2a3f6a;}
+.result-bar{display:none;margin-top:14px;padding:12px 16px;border-radius:10px;}
+.result-bar.show{display:block;}
+.result-bar.ok{background:#0a2018;border:1px solid #1a4a30;color:var(--green);}
+.result-bar.ko{background:#1a1000;border:1px solid #3a2800;color:var(--amber);}
+.r-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;margin-bottom:4px;}
+.r-detail{font-size:12px;color:var(--text2);line-height:1.9;}
+/* Formules */
+.formula-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;font-size:12px;color:var(--text2);line-height:2.2;}
+.formula-box b{color:var(--text);}
+/* Tableau */
+.table-modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.85);z-index:100;overflow-y:auto;padding:20px 12px;}
+.table-modal.show{display:flex;align-items:flex-start;justify-content:center;}
+.table-inner{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;max-width:700px;width:100%;}
+.table-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.table-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--text);}
+.close-btn{height:34px;padding:0 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;}
+.ref-table{width:100%;border-collapse:collapse;font-size:12px;}
+.ref-table th{background:#1a2235;color:var(--text2);font-size:10px;text-transform:uppercase;letter-spacing:.08em;padding:8px 10px;text-align:center;border-bottom:1px solid var(--border);}
+.ref-table td{padding:9px 10px;text-align:center;border-bottom:1px solid #1e2330;color:var(--text);}
+.ref-table tr:nth-child(even) td{background:#191d27;}
+.ref-table .col-sizing{color:var(--amber);font-weight:700;font-family:'Syne',sans-serif;}
+.ref-table .col-frq{color:var(--accent);}
+.ref-table .col-def{color:var(--green);}
+.ref-table .col-ratio{color:var(--text2);font-size:11px;}
+.formula-section{margin-top:16px;background:var(--surface2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--text2);line-height:2.2;}
+.formula-section b{color:var(--text);}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.shake{animation:shake .3s ease;}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Bluff Trainer</h1>
+  <a href="/" class="back-btn">&#8592; Accueil</a>
+</div>
+<div class="main">
+  <div class="stats">
+    <div class="stat s-ok"><div class="stat-v" id="s-ok">0</div><div class="stat-l">Corrects</div></div>
+    <div class="stat"><div class="stat-v" id="s-tot">0</div><div class="stat-l">Tentatives</div></div>
+    <div class="stat s-str"><div class="stat-v" id="s-str">0</div><div class="stat-l">Streak</div></div>
+    <div class="stat s-sc"><div class="stat-v" id="s-sc">-</div><div class="stat-l">Score</div></div>
+  </div>
+
+  <div class="card">
+    <div class="situation">
+      <div class="sit-sentence">
+        Villain mise <span id="sizing" class="sit-highlight">-</span> et a
+        <span id="cv" class="sit-highlight">-</span> combos de value.
+      </div>
+    </div>
+
+    <div class="fields">
+      <div class="field">
+        <div class="field-question">Quelle fréquence doit<br>avoir Villain en bluff ?</div>
+        <div class="field-row">
+          <input class="field-input" id="in-frq" type="number" min="0" max="100" placeholder="?" onkeydown="if(event.key==='Enter')document.getElementById('in-cb').focus()">
+          <span class="field-unit">%</span>
+          <span class="field-result" id="res-frq"></span>
+        </div>
+        <div class="field-answer" id="ans-frq"></div>
+      </div>
+      <div class="field">
+        <div class="field-question">Combien de combos doit avoir Villain en bluff ?</div>
+        <div class="field-row">
+          <input class="field-input" id="in-cb" type="number" min="0" placeholder="?" onkeydown="if(event.key==='Enter')document.getElementById('in-def').focus()">
+          <span class="field-unit">CB</span>
+          <span class="field-result" id="res-cb"></span>
+        </div>
+        <div class="ratio-hint" id="ratio-hint"></div>
+        <div class="field-answer" id="ans-cb"></div>
+      </div>
+      <div class="field">
+        <div class="field-question">Quelle fréquence minimum<br>doit défendre Hero ?</div>
+        <div class="field-row">
+          <input class="field-input" id="in-def" type="number" min="0" max="100" placeholder="?" onkeydown="if(event.key==='Enter')validate()">
+          <span class="field-unit">%</span>
+          <span class="field-result" id="res-def"></span>
+        </div>
+        <div class="field-answer" id="ans-def"></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-p" id="validate-btn" onclick="validate()">Valider</button>
+      <button class="btn btn-s" onclick="newQ()">Nouvelle &#8635;</button>
+      <button class="btn btn-table" onclick="toggleTable()">&#128203; Tableau</button>
+    </div>
+    <div class="result-bar" id="result-bar">
+      <div class="r-title" id="r-title"></div>
+      <div class="r-detail" id="r-detail"></div>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <b>Formules :</b><br>
+    FRQ bluff &nbsp;= <b>bet &divide; (pot + 2&times;bet) &times; 100</b><br>
+    Combos bluff = <b>CV &times; bet &divide; (pot + bet)</b><br>
+    FRQ defense = <b>(1 &minus; bet &divide; (bet + pot)) &times; 100</b>
+  </div>
+</div>
+
+<!-- Modal tableau -->
+<div class="table-modal" id="table-modal" onclick="closeTableOutside(event)">
+  <div class="table-inner">
+    <div class="table-header">
+      <div class="table-title">Tableau de référence — River</div>
+      <button class="close-btn" onclick="toggleTable()">Fermer ✕</button>
+    </div>
+    <table class="ref-table">
+      <thead>
+        <tr>
+          <th>Sizing</th>
+          <th>FRQ bluff</th>
+          <th>Ratio CV/CB</th>
+          <th>Calcul rapide CB</th>
+          <th>FRQ défense min.</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="col-sizing">2 x pot</td><td class="col-frq">40%</td><td class="col-ratio">1.5 CV → 1 CB</td><td>#CV ÷ 10 × 6.5</td><td class="col-def">33%</td></tr>
+        <tr><td class="col-sizing">1.5 x pot</td><td class="col-frq">38%</td><td class="col-ratio">1.7 CV → 1 CB</td><td>#CV ÷ 10 × 6</td><td class="col-def">40%</td></tr>
+        <tr><td class="col-sizing">100% pot</td><td class="col-frq">33%</td><td class="col-ratio">2 CV → 1 CB</td><td>#CV ÷ 2</td><td class="col-def">50%</td></tr>
+        <tr><td class="col-sizing">66% pot</td><td class="col-frq">29%</td><td class="col-ratio">2.5 CV → 1 CB</td><td>#CV ÷ 10 × 4</td><td class="col-def">60%</td></tr>
+        <tr><td class="col-sizing">50% pot</td><td class="col-frq">25%</td><td class="col-ratio">3 CV → 1 CB</td><td>#CV ÷ 3</td><td class="col-def">67%</td></tr>
+        <tr><td class="col-sizing">33% pot</td><td class="col-frq">20%</td><td class="col-ratio">4 CV → 1 CB</td><td>#CV ÷ 4</td><td class="col-def">75%</td></tr>
+        <tr><td class="col-sizing">25% pot</td><td class="col-frq">17%</td><td class="col-ratio">5 CV → 1 CB</td><td>#CV ÷ 5</td><td class="col-def">80%</td></tr>
+        <tr><td class="col-sizing">20% pot</td><td class="col-frq">14%</td><td class="col-ratio">6 CV → 1 CB</td><td>#CV ÷ 6</td><td class="col-def">83%</td></tr>
+      </tbody>
+    </table>
+    <div class="formula-section">
+      <b>Formules :</b><br>
+      FRQ bluff &nbsp;= bet &divide; (pot + 2&times;bet) &times; 100<br>
+      Combos bluff = (#CV) &times; bet &divide; (pot + bet)<br>
+      FRQ défense min. = (1 &minus; bet &divide; (bet + pot)) &times; 100
+    </div>
+  </div>
+</div>
+
+<script>
+let q=null, answered=false, stats={ok:0,tot:0,streak:0};
+
+async function newQ(){
+  answered=false;
+  ['frq','cb','def'].forEach(id=>{
+    document.getElementById('in-'+id).value='';
+    document.getElementById('in-'+id).className='field-input';
+    document.getElementById('res-'+id).textContent='';
+    document.getElementById('res-'+id).style.color='';
+    document.getElementById('ans-'+id).className='field-answer';
+  });
+  document.getElementById('result-bar').className='result-bar';
+  document.getElementById('validate-btn').textContent='Valider';
+  document.getElementById('validate-btn').disabled=false;
+  try{
+    const r=await fetch('/bluff_question');
+    q=await r.json();
+    document.getElementById('sizing').textContent=q.sizing;
+    document.getElementById('cv').textContent=q.cv;
+    document.getElementById('ratio-hint').textContent=q.ratio;
+    document.getElementById('in-frq').focus();
+  }catch(e){document.getElementById('sizing').textContent='Erreur';}
+}
+
+function checkField(inputId, resId, ansId, answer, tolerance, unit){
+  const val=parseInt(document.getElementById(inputId).value);
+  const ok=!isNaN(val)&&Math.abs(val-answer)<=tolerance;
+  document.getElementById(inputId).className='field-input '+(ok?'correct':'wrong shake');
+  document.getElementById(resId).textContent=ok?'✓':'✗';
+  document.getElementById(resId).style.color=ok?'var(--green)':'var(--red)';
+  if(!ok){
+    document.getElementById(ansId).textContent='→ '+answer+(unit||'');
+    document.getElementById(ansId).className='field-answer show';
+    setTimeout(()=>document.getElementById(inputId).classList.remove('shake'),350);
+  }
+  return ok;
+}
+
+function validate(){
+  if(!q)return;
+  if(answered){newQ();return;}
+  answered=true;
+  const okFrq=checkField('in-frq','res-frq','ans-frq',q.frq_bluff,q.frq_bluff_tolerance,'%');
+  const okCb=checkField('in-cb','res-cb','ans-cb',q.cb_answer,q.cb_tolerance,' CB (exact:'+q.cb_exact+')');
+  const okDef=checkField('in-def','res-def','ans-def',q.frq_defense,q.defense_tolerance,'%');
+  const allOk=okFrq&&okCb&&okDef;
+  stats.tot++;
+  if(allOk){stats.ok++;stats.streak++;}else{stats.streak=0;}
+  const rb=document.getElementById('result-bar');
+  if(allOk){
+    rb.className='result-bar show ok';
+    document.getElementById('r-title').textContent='Parfait ! Les 3 bonnes réponses.';
+    document.getElementById('r-detail').textContent='';
+  } else {
+    const n=[okFrq,okCb,okDef].filter(Boolean).length;
+    rb.className='result-bar show ko';
+    document.getElementById('r-title').textContent=n+'/3 correct'+(n>1?'s':'')+'.';
+    document.getElementById('r-detail').textContent='Tolerances : ±2% pour les frequences, ±1 pour les combos.';
+  }
+  document.getElementById('s-ok').textContent=stats.ok;
+  document.getElementById('s-tot').textContent=stats.tot;
+  document.getElementById('s-str').textContent=stats.streak;
+  document.getElementById('s-sc').textContent=stats.tot?Math.round(stats.ok/stats.tot*100)+'%':'-';
+  document.getElementById('validate-btn').textContent='Suivante →';
+}
+
+function toggleTable(){
+  const m=document.getElementById('table-modal');
+  m.classList.toggle('show');
+}
+function closeTableOutside(e){
+  if(e.target===document.getElementById('table-modal')) toggleTable();
+}
+
+newQ();
+</script>
+</body>
+</html>"""
+
+
+HOME_HTML="""<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Poker Trainer</title><link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono&display=swap" rel="stylesheet"><style>:root{--bg:#0d0f14;--surface:#161920;--border:#2a3045;--accent:#4f8ef7;--accent2:#7c5cfc;--text:#e8ecf5;--text2:#7a8399;}*{box-sizing:border-box;margin:0;padding:0;}body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;}h1{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;letter-spacing:-1px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center;margin-bottom:8px;}.sub{color:var(--text2);font-size:13px;text-align:center;margin-bottom:48px;}.apps{display:grid;grid-template-columns:1fr 1fr;gap:20px;width:100%;max-width:600px;}@media(max-width:500px){.apps{grid-template-columns:1fr;}}.app-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px 24px;text-decoration:none;color:var(--text);transition:border-color .2s,transform .15s;display:block;}.app-card:hover{border-color:var(--accent);transform:translateY(-2px);}.app-icon{font-size:36px;margin-bottom:14px;}.app-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:6px;}.app-desc{font-size:12px;color:var(--text2);line-height:1.7;}.app-badge{display:inline-block;margin-top:12px;font-size:11px;padding:3px 10px;border-radius:20px;background:#1a2a4a;color:var(--accent);border:1px solid #2a3f6a;}</style></head><body><h1>Poker Trainer</h1><p class="sub">Ranges 50BB, 25BB, 20BB, 15BB &amp; 10BB</p><div class="apps"><a class="app-card" href="/combos"><div class="app-icon">&#9824;</div><div class="app-title">Combos Trainer</div><div class="app-desc">Compte les combos qui te battent a partir de la range adverse. Bloqueurs, flop/turn/river.</div><div class="app-badge">6 scenarios 50BB</div></a><a class="app-card" href="/range"><div class="app-icon">&#9830;</div><div class="app-title">Range Trainer</div><div class="app-desc">Reconstruit la range de memoire. 33 scenarios 50BB, 25BB, 20BB, 15BB et 10BB.</div><div class="app-badge">33 scenarios</div></a><a class="app-card" href="/bluff" style="grid-column:1/-1;max-width:300px;margin:0 auto;"><div class="app-icon">&#127922;</div><div class="app-title">Bluff Trainer</div><div class="app-desc">Calcule les frequences de bluff et de defense optimales au river selon le sizing.</div><div class="app-badge">8 sizings</div></a></div></body></html>"""
 
 HTML_COMBOS="""<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Combos Trainer</title><link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet"><style>:root{--bg:#0d0f14;--surface:#161920;--surface2:#1e2330;--border:#2a3045;--accent:#4f8ef7;--accent2:#7c5cfc;--green:#2dd4a0;--red:#f75f5f;--amber:#f7c94f;--text:#e8ecf5;--text2:#7a8399;--text3:#4a5268;}*{box-sizing:border-box;margin:0;padding:0;}body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 12px 80px;}.top-header{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:900px;margin-bottom:8px;}.back-btn{height:36px;padding:0 14px;border-radius:9px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:6px;}.back-btn:hover{color:var(--text);border-color:var(--accent);}h1{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;letter-spacing:-1px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}.sub{color:var(--text2);font-size:11px;margin-top:2px;}.main{width:100%;max-width:900px;display:flex;flex-direction:column;gap:12px;}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}.stat{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;}.stat-v{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;}.stat-l{font-size:10px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:.07em;}.s-ok .stat-v{color:var(--green);}.s-str .stat-v{color:var(--amber);}.s-sc .stat-v{color:var(--accent);}.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;}.lbl{font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;}.top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:6px;}.progress{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:12px;}.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width .4s;width:0%;}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;}@media(max-width:640px){.two-col{grid-template-columns:1fr;}}.playing-card{display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:space-between;width:50px;height:70px;background:#fff;border-radius:7px;border:1px solid #bbb;padding:4px 5px;box-shadow:2px 3px 8px rgba(0,0,0,.5);font-family:'DM Mono',monospace;}.playing-card .top{font-size:14px;font-weight:700;line-height:1;}.playing-card .mid{font-size:20px;text-align:center;width:100%;line-height:1;}.playing-card .bot{font-size:14px;font-weight:700;line-height:1;transform:rotate(180deg);align-self:flex-end;}.playing-card.black .top,.playing-card.black .bot,.playing-card.black .mid{color:#111;}.playing-card.red-c .top,.playing-card.red-c .bot,.playing-card.red-c .mid{color:#cc1111;}.playing-card.hero-c{border:2.5px solid var(--accent);box-shadow:2px 3px 6px rgba(0,0,0,.5),0 0 12px rgba(79,142,247,.4);}.cards-row{display:flex;gap:6px;flex-wrap:wrap;}.cards-label{font-size:10px;color:var(--text3);margin-bottom:5px;letter-spacing:.1em;text-transform:uppercase;}.cards-block{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;margin-bottom:10px;}.badge{display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;margin-right:5px;margin-bottom:4px;}.b-street{background:#1a2a4a;color:var(--accent);border:1px solid #2a3f6a;}.b-sit{background:#1a2a1a;color:var(--green);border:1px solid #1a4a2a;}.b-sit-3bet{background:#2a1a3a;color:#b07cf7;border:1px solid #3f2a6a;}.b-hero{background:#2a1e0a;color:var(--amber);border:1px solid #4a3210;}.b-info{background:#1e1e1e;color:var(--text2);border:1px solid var(--border);font-size:10px;}.main-question{background:linear-gradient(135deg,#0f1a2e,#1a0f2e);border:1px solid #2a3f6a;border-radius:12px;padding:14px 16px;margin-bottom:14px;}.mq-text{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--text);line-height:1.4;}.mq-sub{font-size:11px;color:var(--text2);margin-top:4px;}.range-toggle button{height:28px;padding:0 12px;border-radius:8px;font-size:11px;font-family:'Syne',sans-serif;font-weight:700;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;margin-bottom:6px;}.range-toggle button:hover{background:var(--border);}.grid-wrap{overflow-x:auto;}table.rgrid{border-collapse:collapse;width:100%;}table.rgrid td{width:7.69%;aspect-ratio:1;border:0.5px solid #1a1e2a;font-size:8.5px;font-weight:500;text-align:center;vertical-align:middle;color:var(--text3);background:var(--surface2);padding:0;line-height:1;}table.rgrid td.in-range{background:#1a3a2a;color:#5dca9e;}table.rgrid td.pp{background:#1e1e2a;}table.rgrid td.pp.in-range{background:#1a2a3a;color:var(--accent);}table.rgrid td.hero-hand{outline:2px solid var(--amber);outline-offset:-2px;}.fields-title{font-size:12px;color:var(--text2);margin-bottom:8px;line-height:1.5;}.fields-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}.field-row{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:9px 12px;}.field-label{flex:1;font-size:12px;color:var(--text2);}.field-input{width:68px;height:38px;background:#fff;border:1.5px solid #999;border-radius:7px;color:#111;font-family:'Syne',sans-serif;font-size:17px;font-weight:800;text-align:center;outline:none;transition:border-color .15s;}.field-input:focus{border-color:var(--accent);}.field-input.correct{background:#e6fff5;border-color:#2dd4a0!important;}.field-input.wrong{background:#fff2f2;border-color:#f75f5f!important;}.field-res{width:22px;text-align:center;font-size:13px;}.field-res.ok{color:var(--green);}.field-res.ko{color:var(--red);}.field-ans{font-size:11px;color:var(--red);min-width:22px;text-align:right;display:none;font-weight:700;}.field-ans.show{display:block;}.actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}.btn{height:44px;padding:0 18px;border-radius:10px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:transform .1s;}.btn:active{transform:scale(.97);}.btn-p{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}.btn-n{background:var(--surface2);color:var(--text);border:1px solid var(--border);height:34px;padding:0 12px;font-size:12px;}.btn-amber{background:#1e1c0d;color:var(--amber);border:1px solid #3a3210;height:44px;padding:0 16px;}.summary{margin-top:12px;padding:12px 16px;border-radius:10px;display:none;}.summary.show{display:block;}.summary.all-ok{background:#0a2018;border:1px solid #1a4a30;}.summary.partial{background:#1a1400;border:1px solid #3a2800;}.sum-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;margin-bottom:4px;}.sum-title.ok{color:var(--green);}.sum-title.ko{color:var(--amber);}.sum-detail{font-size:11px;color:var(--text2);line-height:2;}.hint-box{margin-top:8px;padding:10px 14px;background:#1e1c0d;border:1px solid #3a3210;border-radius:8px;font-size:12px;color:var(--amber);display:none;}.hint-box.show{display:block;}.loading{color:var(--text2);font-size:14px;padding:40px 0;text-align:center;}.help{font-size:11px;color:var(--text3);line-height:2;}.help b{color:var(--text2);}#filter-screen{width:100%;max-width:900px;margin-top:0;}.filter-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px 26px;margin-bottom:12px;}.filter-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:16px;color:var(--text);}.scenario-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;}.scenario-card{padding:14px 16px;border-radius:12px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:all .15s;}.scenario-card:hover{border-color:var(--accent);background:#1a2235;}.scenario-card.selected{border-color:var(--accent);background:#1a2235;box-shadow:0 0 0 2px var(--accent);}.sc-pot{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:4px;}.sc-desc{font-size:13px;color:var(--text);font-weight:500;}.sc-sub{font-size:11px;color:var(--text2);margin-top:3px;}.start-btn{width:100%;height:52px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-family:'Syne',sans-serif;font-size:16px;font-weight:800;cursor:pointer;margin-top:8px;}.start-btn:disabled{opacity:.4;cursor:default;}#game-screen{display:none;width:100%;max-width:900px;margin-top:0;}@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}.shake{animation:shake .3s ease;}</style></head><body>
 <div class="top-header"><div><h1>Combos Trainer</h1><p class="sub">Ranges 50BB</p></div><a href="/" class="back-btn">&#8592; Accueil</a></div>
@@ -567,6 +865,8 @@ class Handler(BaseHTTPRequestHandler):
             sid=qs.get('id',[''])[0] or None
             self._json(get_scenario(sid))
         elif path=='/scenarios': self._json(get_scenarios_list())
+        elif path=='/bluff': self._html(HTML_BLUFF)
+        elif path=='/bluff_question': self._json(gen_question())
         else: self.send_response(404); self.end_headers()
     def _html(self,html):
         self.send_response(200); self.send_header('Content-Type','text/html; charset=utf-8'); self.end_headers(); self.wfile.write(html.encode())
